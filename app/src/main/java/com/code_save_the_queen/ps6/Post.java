@@ -1,13 +1,13 @@
 package com.code_save_the_queen.ps6;
 
 class Post {
-    private String post;
+    private long id;
 
-    public Post() {
-        this.post = "{}";
+    public Post(long id) {
+        this.id = id;
     }
 
-    public String getPost() {
-        return post;
+    public long getId() {
+        return id;
     }
 }

@@ -4,11 +4,8 @@ import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -25,6 +22,7 @@ public class ButtonActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_button);
+        long id = getIntent().getLongExtra("ID",-1);
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://sylvainlangler.alwaysdata.net/api/")
@@ -33,53 +31,63 @@ public class ButtonActivity extends AppCompatActivity {
 
         jsonApi = retrofit.create(JsonApi.class);
 
+        final Post post = new Post(id);
 
-    }
-
-
-    public void buttonClick(View view) {
-        switch (view.getId()) {
-            case R.id.buttonValider:
-                createPost();
-                break;
-            case R.id.buttonIncomplet:
-                Toast.makeText(this, "Button Incomplet", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.buttonRefuser:
-                Toast.makeText(this, "Button Refuser", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.buttonRetard:
-                Toast.makeText(this, "Button Retard", Toast.LENGTH_SHORT).show();
-                break;
-
-        }
-    }
-
-    private void createPost() {
-        Post post = new Post();
-
-        Call<Post> call = jsonApi.createPost(post);
-
-        call.enqueue(new Callback<Post>() {
+        Button Valider = (Button) findViewById(R.id.buttonValider);
+        Valider.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onResponse(Call<Post> call, Response<Post> response) {
+            public void onClick(View v) {
+                createPost(post);
+            }
+        }); // calling onClick() method
+        Button Refuser = (Button) findViewById(R.id.buttonRefuser);
+        Refuser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(context, "Button Refuser", Toast.LENGTH_SHORT).show();
+            }
+        });
+        Button Retard = (Button) findViewById(R.id.buttonRetard);
+        Retard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(context, "Button Retard", Toast.LENGTH_SHORT).show();
+            }
+        });
+        Button Incomplet = (Button) findViewById(R.id.buttonIncomplet);
+        Incomplet.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(context, "Button Incomplet", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+    }
+
+
+    private void createPost(Post post) {
+        Call<Integer> call = jsonApi.createPost(post);
+
+        call.enqueue(new Callback<Integer>() {
+            @Override
+            public void onResponse(Call<Integer> call, Response<Integer> response) {
 
                 if (!response.isSuccessful()) {
                     Toast.makeText(context, "Code: " + response.code(), Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                Post postResponse = response.body();
+                int postResponse = response.body();
 
                 String content = "";
-                content += "Text: " + postResponse.getPost() + "\n\n";
+                content += "Text: " + postResponse + "\n\n";
 
                 Toast.makeText(context, content, Toast.LENGTH_SHORT).show();
 
             }
 
             @Override
-            public void onFailure(Call<Post> call, Throwable t) {
+            public void onFailure(Call<Integer> call, Throwable t) {
                 Toast.makeText(context, t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });

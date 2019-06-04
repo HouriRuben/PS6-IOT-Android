@@ -5,10 +5,10 @@ import retrofit2.http.Body;
 import retrofit2.http.POST;
 
 
-public interface JsonApi {
+public interface JsonLoginApi {
 
-    @POST("increment")
-    Call<Integer> createPost(@Body Post post);
 
+    @POST("connect")
+    Call<LoginResponse> loginUser(@Body User user);
 
 }

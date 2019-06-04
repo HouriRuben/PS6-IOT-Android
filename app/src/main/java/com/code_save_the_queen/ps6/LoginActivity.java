@@ -3,6 +3,7 @@ package com.code_save_the_queen.ps6;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
@@ -19,6 +20,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.text.LoginFilter;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
@@ -29,9 +31,16 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -299,6 +308,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         private final String mEmail;
         private final String mPassword;
+        private JsonLoginApi jsonLoginApi;
+        Context context = getApplicationContext();
 
         UserLoginTask(String email, String password) {
             mEmail = email;
@@ -333,19 +344,65 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mAuthTask = null;
             showProgress(false);
 
-            if (success) {
-                Intent intent = new Intent(getApplicationContext(), ButtonActivity.class);
-                startActivity(intent);
-            } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
-            }
+            login();
+
         }
 
         @Override
         protected void onCancelled() {
             mAuthTask = null;
             showProgress(false);
+        }
+
+        private boolean login() {
+            final boolean[] realresponse = {false};
+            Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://sylvainlangler.alwaysdata.net/api/connection/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+            jsonLoginApi = retrofit.create(JsonLoginApi.class);
+            User user = new User(mEmail,mPassword);
+
+            Call<LoginResponse> call = jsonLoginApi.loginUser(user);
+
+            call.enqueue(new Callback<LoginResponse>() {
+                @Override
+                public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+
+                    if (!response.isSuccessful()) {
+                        Toast.makeText(context, "Code: " + response.code(), Toast.LENGTH_SHORT).show();
+
+                        return;
+                    }
+
+                    LoginResponse postResponse = response.body();
+
+                    String content = "";
+                    content += "Text: " + postResponse.getStatus() + "\n\n";
+
+                    Toast.makeText(context, content, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "" +postResponse.getId(), Toast.LENGTH_SHORT).show();
+
+                    if(postResponse.getStatus().equals("ok")){
+                        Intent intent = new Intent(getApplicationContext(), ButtonActivity.class);
+                        intent.putExtra("ID",postResponse.getId());
+                        startActivity(intent);
+                        realresponse[0] = true;
+                    } else {
+                        mPasswordView.setError(getString(R.string.error_incorrect_password));
+                        mPasswordView.requestFocus();
+                    }
+
+
+                }
+
+                @Override
+                public void onFailure(Call<LoginResponse> call, Throwable t) {
+                    Toast.makeText(context, t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+            return realresponse[0];
         }
     }
 }
