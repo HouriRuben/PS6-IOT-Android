@@ -71,11 +71,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+    private String orchestratorIp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        orchestratorIp = getIntent().getStringExtra("IP");
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
@@ -357,7 +360,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         private boolean login() {
             final boolean[] realresponse = {false};
             Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://sylvainlangler.alwaysdata.net/api/connection/")
+                .baseUrl("https://sylvainlangler.alwaysdata.net/api/admin/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -387,6 +390,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     if(postResponse.getStatus().equals("ok")){
                         Intent intent = new Intent(getApplicationContext(), ButtonActivity.class);
                         intent.putExtra("ID",postResponse.getId());
+                        intent.putExtra("IP", orchestratorIp);
                         startActivity(intent);
                         realresponse[0] = true;
                     } else {
